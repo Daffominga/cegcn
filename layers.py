@@ -43,6 +43,28 @@ class CEConv(MessagePassing):
         glorot(self.weight)
         zeros(self.bias)
 
+
+
+    # CEGCN without high-pass filter
+    def forward(self, edge_index, edge_weight, x, batch: OptTensor = None):
+
+        Filter = (self.a[0] * self.cos_list[0].to(edge_index.device))  # aI-0b = I
+        Tx_0 = x
+        out = torch.matmul(torch.matmul(Filter, Tx_0), self.weight[0])
+        # out = torch.matmul(x, self.weight[0])
+
+        for k in range(1, self.weight.size(0)):
+            Tx_1 = self.propagate(edge_index, edge_weight=edge_weight, x=Tx_0, size=None)
+            Tx_0 = Tx_1
+            out = out + torch.matmul(Tx_1, self.weight[k])
+
+        if self.bias is not None:
+            out += self.bias
+
+        return out
+
+
+    '''
     def forward(self, edge_index, edge_weight, x, batch: OptTensor = None):
 
         Filter = (self.a[0] * self.cos_list[0].to(edge_index.device))  # aI-0b = I
@@ -63,6 +85,7 @@ class CEConv(MessagePassing):
             out += self.bias
 
         return out
+    '''
 
     def message(self, x_j, edge_weight):
         # x_j has shape [E, out_channels], edge_weight has shape [1, E]
