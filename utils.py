@@ -73,7 +73,6 @@ def get_sin(edge_index, edge_weight, k_taylor):
 
 def get_filter(edge_index, edge_weight, k_taylor, k_filter):
     edge_weight = edge_weight
-    print(edge_weight)
     num_nodes = maybe_num_nodes(edge_index)
     cos_list = list()
     sin_list = list()
