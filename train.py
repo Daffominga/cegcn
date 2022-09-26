@@ -4,26 +4,18 @@ import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
 import torch_geometric.transforms as T
 import gc, sys, time
-from typing import Optional
-from torch_geometric.typing import OptTensor
-from torch.nn import Parameter
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.utils import remove_self_loops, add_self_loops, to_dense_adj, dense_to_sparse
 from torch_geometric.utils import get_laplacian
 from torch_geometric.nn.inits import glorot, zeros
 from layers import CEConv
-from utlis import get_normed_lapacian, sp_laplacian_expo, get_sin, get_cos, get_filter
+from utils import get_normed_lapacian, sp_laplacian_expo, get_sin, get_cos, get_filter
+from torch_geometric.datasets import MixHopSyntheticDataset
 
-# device = torch.device('cpu' if torch.cuda.is_available() else 'cuda')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-dataset = Planetoid(root='E:/workspace/pythonProject/pytorch_geometric/tmp/Cora', name='Cora',
-                    transform=T.NormalizeFeatures())
-# dataset = Planetoid(root='/root/tmp/Cora', name='Cora',
-#                     transform=T.NormalizeFeatures())
-# dataset = Planetoid(root='E:/workspace/pythonProject/pytorch_geometric/tmp/CiteSeer', name='CiteSeer',
-#                     transform=T.NormalizeFeatures())
-# dataset = Planetoid(root='/root/tmp/PubMed', name='PubMed', transform=T.NormalizeFeatures())
 
+dataset = MixHopSyntheticDataset(root='E:/workspace/pythonProject/datasets//mixhop/homophily00', homophily=0.0,
+                                 transform=None)
 k_filter = 3 + 1
 ita = 1e-3
 
@@ -71,7 +63,7 @@ if __name__ == '__main__':
 
     res = list()
 
-    for epoch in range(100):
+    for epoch in range(2000):
         model.train()
         optimizer.zero_grad()
         y_hat = model(edge_index, edge_weight, x)
@@ -89,14 +81,10 @@ if __name__ == '__main__':
 
         correct = int(pred[data.test_mask].eq(data.y[data.test_mask]).sum().item())
         acc = correct / int(data.test_mask.sum())
-        if epoch % 1 == 0:
+        if epoch % 10 == 0:
             log = 'Epoch: {:03d}, Train loss: {:.4f}, Test acc: {:.4f}'
             print(log.format(epoch, loss.item(), acc))
 
         res.append(acc)
     print('Best accuracy is: {:.4f}'.format(max(res)))
-
-
-
-
 
